@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>마피아 역할 배정</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0d12;
+    --panel: #151922;
+    --panel-edge: #232838;
+    --blood: #b91d2e;
+    --gold: #c9a24b;
+    --blue: #3a7bd5;
+    --green: #3fa76b;
+    --text: #e8e6df;
+    --muted: #7c8194;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(185,29,46,0.12), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 28px 18px 40px;
+    overflow-x:hidden;
+  }
+
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.35em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:6px;
+    opacity:0.85;
+  }
+  h1{
+    font-family:'Noto Serif KR', serif;
+    font-weight:900;
+    font-size:30px;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+    text-align:center;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14px;
+    text-align:center;
+    margin-bottom:24px;
+  }
+
+  /* ---------- setup screen ---------- */
+  .setup-card{
+    width:100%;
+    max-width:440px;
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:18px;
+    padding:26px 22px 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  }
+  .field-label{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:10px;
+    display:block;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:22px;
+    margin-bottom:22px;
+  }
+  .stepper button{
+    width:46px;height:46px;
+    border-radius:50%;
+    border:1px solid var(--panel-edge);
+    background:#1c212e;
+    color:var(--text);
+    font-size:22px;
+    line-height:1;
+    cursor:pointer;
+  }
+  .stepper button:active{ background: var(--blood); border-color: var(--blood); }
+  .stepper .count{
+    font-family:'Noto Serif KR', serif;
+    font-weight:900;
+    font-size:44px;
+    width:70px;
+    text-align:center;
+  }
+
+  .divider{
+    height:1px;
+    background:var(--panel-edge);
+    margin:4px 0 18px;
+  }
+
+  .role-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 2px;
+  }
+  .role-row + .role-row{
+    border-top:1px solid var(--panel-edge);
+  }
+  .role-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .role-dot{
+    width:10px; height:10px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  .role-dot.mafia{ background:var(--blood); }
+  .role-dot.police{ background:var(--blue); }
+  .role-dot.doctor{ background:var(--green); }
+  .role-dot.spy{ background:var(--gold); }
+  .role-dot.citizen{ background:#4a5064; }
+  .role-info .name{ font-size:14px; font-weight:500; }
+  .role-info .desc{ font-size:11px; color:var(--muted); margin-top:1px; }
+
+  .mini-stepper{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .mini-stepper button{
+    width:30px; height:30px;
+    border-radius:8px;
+    border:1px solid var(--panel-edge);
+    background:#1c212e;
+    color:var(--text);
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .mini-stepper button:active{ background: var(--blood); border-color: var(--blood); }
+  .mini-stepper .n{
+    width:20px;
+    text-align:center;
+    font-weight:700;
+    font-size:15px;
+  }
+
+  .citizen-note{
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    margin:16px 0 4px;
+  }
+  .citizen-note b{ color:var(--text); }
+
+  .team-summary{
+    display:flex;
+    gap:8px;
+    margin:10px 0 2px;
+  }
+  .team-chip{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--muted);
+    background:#0f131b;
+    border:1px solid var(--panel-edge);
+    border-radius:10px;
+    padding:8px 6px;
+  }
+  .team-chip b{ color:var(--text); font-size:13px; }
+  .team-chip.mafia-team{ border-color: rgba(185,29,46,0.35); }
+  .team-chip.citizen-team{ border-color: rgba(58,123,213,0.3); }
+
+  .error-note{
+    font-size:12px;
+    color:#ff8a8a;
+    text-align:center;
+    margin:10px 0 0;
+    min-height:14px;
+  }
+
+  .start-btn{
+    width:100%;
+    padding:16px;
+    border-radius:12px;
+    border:none;
+    background: linear-gradient(180deg, #cf2438, var(--blood));
+    color:#fff;
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    cursor:pointer;
+    box-shadow: 0 10px 24px rgba(185,29,46,0.35);
+    margin-top:18px;
+  }
+  .start-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+  .start-btn:active:not(:disabled){ transform: translateY(1px); }
+
+  /* ---------- game screen ---------- */
+  .grid{
+    width:100%;
+    max-width:480px;
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:12px;
+    margin-top:6px;
+  }
+  .player-card{
+    aspect-ratio: 3/4;
+    border-radius:14px;
+    background: linear-gradient(160deg, #1c212e, #12151e);
+    border:1px solid var(--panel-edge);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    cursor:pointer;
+    position:relative;
+    transition: transform .12s ease;
+  }
+  .player-card:active{ transform: scale(0.96); }
+  .player-card .num{
+    font-family:'Noto Serif KR', serif;
+    font-weight:900;
+    font-size:26px;
+    color:var(--gold);
+  }
+  .player-card .tag{
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:0.05em;
+  }
+  .player-card.done{
+    background:#0e1017;
+    border-color:#1a1d27;
+    cursor:default;
+  }
+  .player-card.done:active{ transform:none; }
+  .player-card.done .num{ color:#3c4152; }
+  .player-card.done .tag{ color:#3c4152; }
+  .player-card.done .checkmark{
+    position:absolute;
+    top:8px; right:10px;
+    font-size:14px;
+    color:#4a5064;
+  }
+
+  .status-bar{
+    width:100%;
+    max-width:480px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .reset-link{
+    color:var(--muted);
+    text-decoration:underline;
+    background:none;
+    border:none;
+    font-size:13px;
+    cursor:pointer;
+    padding:0;
+  }
+
+  .hidden{ display:none !important; }
+
+  /* ---------- reveal overlay ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background: rgba(4,5,8,0.92);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    z-index:50;
+    padding:24px;
+    text-align:center;
+  }
+  .overlay .who{
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:18px;
+    letter-spacing:0.05em;
+  }
+  .role-card{
+    width:min(280px, 78vw);
+    min-height: min(340px, 54vh);
+    border-radius:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin-bottom:16px;
+    border:1px solid;
+    padding: 20px 10px;
+  }
+  .role-card.mafia{
+    background: radial-gradient(ellipse at 50% 30%, rgba(185,29,46,0.35), #1a0d10 70%);
+    border-color: var(--blood);
+  }
+  .role-card.police{
+    background: radial-gradient(ellipse at 50% 30%, rgba(58,123,213,0.28), #0d141f 70%);
+    border-color: var(--blue);
+  }
+  .role-card.doctor{
+    background: radial-gradient(ellipse at 50% 30%, rgba(63,167,107,0.25), #0d1a13 70%);
+    border-color: var(--green);
+  }
+  .role-card.spy{
+    background: radial-gradient(ellipse at 50% 30%, rgba(201,162,75,0.25), #1a150d 70%);
+    border-color: var(--gold);
+  }
+  .role-card.citizen{
+    background: radial-gradient(ellipse at 50% 30%, rgba(201,162,75,0.12), #14171f 70%);
+    border-color: var(--panel-edge);
+  }
+  .role-icon{ font-size:52px; }
+  .role-name{
+    font-family:'Noto Serif KR', serif;
+    font-weight:900;
+    font-size:28px;
+  }
+  .role-card.mafia .role-name{ color:#ff5468; }
+  .role-card.police .role-name{ color:#7db2f2; }
+  .role-card.doctor .role-name{ color:#7fd6a3; }
+  .role-card.spy .role-name{ color:#e6c877; }
+  .role-card.citizen .role-name{ color:var(--text); }
+  .role-desc{
+    font-size:12px;
+    color:var(--muted);
+    padding:0 20px;
+    line-height:1.6;
+  }
+  .close-btn{
+    padding:14px 40px;
+    border-radius:12px;
+    border:1px solid var(--panel-edge);
+    background:#1c212e;
+    color:var(--text);
+    font-size:15px;
+    cursor:pointer;
+  }
+  .close-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  .name-input{
+    width:min(280px, 78vw);
+    padding:13px 16px;
+    border-radius:12px;
+    border:1px solid var(--panel-edge);
+    background:#0f131b;
+    color:var(--text);
+    font-size:15px;
+    font-family:'Noto Sans KR', sans-serif;
+    text-align:center;
+    margin-bottom:16px;
+    outline:none;
+  }
+  .name-input:focus{
+    border-color: var(--gold);
+  }
+  .name-input::placeholder{ color: var(--muted); }
+  .warn{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:14px;
+    max-width:280px;
+  }
+
+  .result-banner{
+    width:100%;
+    max-width:480px;
+    text-align:center;
+    padding:18px;
+    border-radius:14px;
+    background:#0f131b;
+    border:1px dashed var(--panel-edge);
+    color:var(--muted);
+    font-size:13px;
+    margin-top:20px;
+  }
+  .start-night-btn{
+    display:block;
+    width:100%;
+    margin-top:14px;
+    padding:14px;
+    border-radius:12px;
+    border:none;
+    background: linear-gradient(180deg, #cf2438, var(--blood));
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  /* ---------- night screen ---------- */
+  .mode-tabs{
+    width:100%;
+    max-width:480px;
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:6px;
+    margin-bottom:14px;
+  }
+  .mode-tab{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    white-space:normal;
+    padding:9px 4px;
+    border-radius:10px;
+    border:1px solid var(--panel-edge);
+    background:#151922;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:500;
+    line-height:1.2;
+    cursor:pointer;
+  }
+  .mode-tab span{ font-size:16px; }
+  .mode-tab.active{
+    background: var(--blood);
+    border-color: var(--blood);
+    color:#fff;
+  }
+  .mode-instruction{
+    width:100%;
+    max-width:480px;
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:16px;
+    min-height:16px;
+  }
+  .night-card{
+    aspect-ratio: 3/4;
+    border-radius:14px;
+    background: linear-gradient(160deg, #1c212e, #12151e);
+    border:1px solid var(--panel-edge);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    cursor:default;
+    position:relative;
+    padding:6px;
+    text-align:center;
+  }
+  .night-card .nm{
+    font-size:14px;
+    font-weight:700;
+    word-break:keep-all;
+  }
+  .night-card.selectable{
+    cursor:pointer;
+    border-color: var(--gold);
+  }
+  .night-card.selectable:active{ transform: scale(0.96); }
+  .night-card.dead{
+    background:#0a0b0f;
+    border-color:#1a1d27;
+  }
+  .night-card.dead .nm{
+    color:#4a5064;
+    text-decoration: line-through;
+  }
+  .night-card .skull{
+    font-size:20px;
+    margin-bottom:2px;
+  }
+  .night-card .vote-badge{
+    position:absolute;
+    top:6px; right:8px;
+    font-size:11px;
+    font-weight:700;
+    color: var(--gold);
+    background:#0b0d12;
+    border:1px solid var(--panel-edge);
+    border-radius:8px;
+    padding:2px 6px;
+  }
+  .morning-btn{
+    width:100%;
+    max-width:480px;
+    margin-top:20px;
+    padding:15px;
+    border-radius:12px;
+    border:1px solid var(--panel-edge);
+    background:#1c212e;
+    color: var(--gold);
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .morning-btn:active{ transform: translateY(1px); }
+
+  .action-msg, .info-msg{
+    font-size:16px;
+    color:var(--text);
+    margin-bottom:26px;
+    max-width:280px;
+    line-height:1.6;
+  }
+  .action-btn-row{
+    display:flex;
+    gap:12px;
+  }
+  .action-btn-row .close-btn{ padding:14px 26px; }
+  .danger-btn{
+    background: var(--blood) !important;
+    border-color: var(--blood) !important;
+    color:#fff !important;
+  }
+</style>
+</head>
+<body>
+
+  <div class="eyebrow">NIGHT FALLS ON THE TOWN</div>
+  <h1>마피아 역할 배정</h1>
+  <div class="sub">각자 순서대로 화면을 눌러 본인의 역할만 확인하세요</div>
+
+  <!-- SETUP SCREEN -->
+  <div class="setup-card" id="setupScreen">
+    <span class="field-label">전체 인원 수</span>
+    <div class="stepper">
+      <button id="minusBtn" type="button">−</button>
+      <div class="count" id="countDisplay">8</div>
+      <button id="plusBtn" type="button">+</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <span class="field-label">역할별 인원</span>
+
+    <div class="role-row">
+      <div class="role-info">
+        <span class="role-dot mafia"></span>
+        <div>
+          <div class="name">마피아</div>
+          <div class="desc">밤마다 한 명을 지목해 제거</div>
+        </div>
+      </div>
+      <div class="mini-stepper">
+        <button type="button" data-role="mafia" data-dir="-1">−</button>
+        <span class="n" id="n-mafia">1</span>
+        <button type="button" data-role="mafia" data-dir="1">+</button>
+      </div>
+    </div>
+
+    <div class="role-row">
+      <div class="role-info">
+        <span class="role-dot police"></span>
+        <div>
+          <div class="name">경찰</div>
+          <div class="desc">밤마다 한 명이 마피아인지 조사</div>
+        </div>
+      </div>
+      <div class="mini-stepper">
+        <button type="button" data-role="police" data-dir="-1">−</button>
+        <span class="n" id="n-police">0</span>
+        <button type="button" data-role="police" data-dir="1">+</button>
+      </div>
+    </div>
+
+    <div class="role-row">
+      <div class="role-info">
+        <span class="role-dot doctor"></span>
+        <div>
+          <div class="name">의사</div>
+          <div class="desc">밤마다 한 명을 지목해 치료</div>
+        </div>
+      </div>
+      <div class="mini-stepper">
+        <button type="button" data-role="doctor" data-dir="-1">−</button>
+        <span class="n" id="n-doctor">0</span>
+        <button type="button" data-role="doctor" data-dir="1">+</button>
+      </div>
+    </div>
+
+    <div class="role-row">
+      <div class="role-info">
+        <span class="role-dot spy"></span>
+        <div>
+          <div class="name">스파이</div>
+          <div class="desc">마피아 팀, 밤마다 1명의 직업을 조사</div>
+        </div>
+      </div>
+      <div class="mini-stepper">
+        <button type="button" data-role="spy" data-dir="-1">−</button>
+        <span class="n" id="n-spy">0</span>
+        <button type="button" data-role="spy" data-dir="1">+</button>
+      </div>
+    </div>
+
+    <div class="citizen-note" id="citizenNote">나머지 <b>7명</b>은 시민이 됩니다</div>
+    <div class="team-summary" id="teamSummary">
+      <div class="team-chip mafia-team">
+        <span class="role-dot mafia"></span>마피아 팀 <b id="mafiaTeamCount">1</b>명
+      </div>
+      <div class="team-chip citizen-team">
+        <span class="role-dot citizen"></span>시민 팀 <b id="citizenTeamCount">7</b>명
+      </div>
+    </div>
+    <div class="error-note" id="errorNote"></div>
+
+    <button class="start-btn" id="startBtn" type="button">게임 시작</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="hidden" id="gameScreen" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+    <div class="status-bar">
+      <span id="progressText">0 / 8 명 확인 완료</span>
+      <button class="reset-link" id="resetBtn" type="button">처음부터 다시</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="result-banner hidden" id="allDoneBanner">
+      모두 확인했습니다. 이제 사회자 없이 진행할 수 있어요.
+      <button class="start-night-btn" id="startNightBtn" type="button">낮 시작하기 →</button>
+    </div>
+  </div>
+
+  <!-- NIGHT SCREEN -->
+  <div class="hidden" id="nightScreen" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+    <div class="status-bar">
+      <span id="dayLabel">1일차 - 밤</span>
+      <button class="reset-link" id="resetBtn2" type="button">처음부터 다시</button>
+    </div>
+
+    <div class="mode-tabs" id="modeTabs">
+      <button class="mode-tab" data-mode="mafia"><span>🔪</span>마피아</button>
+      <button class="mode-tab" data-mode="police"><span>🔎</span>경찰</button>
+      <button class="mode-tab" data-mode="doctor"><span>💉</span>의사</button>
+      <button class="mode-tab" data-mode="spy"><span>🎭</span>스파이</button>
+      <button class="mode-tab" data-mode="citizen"><span>🕵️</span>시민</button>
+    </div>
+
+    <div class="mode-instruction" id="modeInstruction">
+      진행할 사람이 자신의 역할 모드를 눌러주세요
+    </div>
+
+    <div class="grid" id="nightGrid"></div>
+
+    <button class="morning-btn" id="morningBtn" type="button">☀️ 아침이 되었습니다</button>
+  </div>
+
+  <!-- DAY VOTE SCREEN -->
+  <div class="hidden" id="voteScreen" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+    <div class="status-bar">
+      <span id="voteDayLabel">1일차 - 낮 투표</span>
+      <button class="reset-link" id="resetBtn3" type="button">처음부터 다시</button>
+    </div>
+    <div class="mode-instruction">토론 후, 처형하고 싶은 사람을 누를 때마다 표가 1씩 올라가요</div>
+    <div class="grid" id="voteGrid"></div>
+    <div class="action-btn-row" style="margin-top:20px; width:100%; max-width:480px;">
+      <button class="close-btn" id="voteSkipBtn" type="button" style="flex:1;">아무도 처형 안 함</button>
+      <button class="close-btn danger-btn" id="voteConfirmBtn" type="button" style="flex:1;">처형 확정</button>
+    </div>
+  </div>
+
+  <!-- REVEAL OVERLAY -->
+  <div class="overlay hidden" id="overlay">
+    <div class="who" id="overlayWho">3번 플레이어</div>
+    <div class="role-card" id="roleCard">
+      <div class="role-icon" id="roleIcon">🕵️</div>
+      <div class="role-name" id="roleName">시민</div>
+      <div class="role-desc" id="roleDesc">낮에 토론으로 마피아를 찾아 투표로 지목하세요.</div>
+    </div>
+    <input type="text" id="nameInput" class="name-input" placeholder="내 이름 입력" maxlength="10" />
+    <button class="close-btn" id="closeBtn" type="button">확인했어요, 닫기</button>
+    <div class="warn">※ 옆 사람이 보지 않도록 화면을 가려주세요</div>
+  </div>
+
+  <!-- NIGHT ACTION OVERLAY (confirm kill / heal) -->
+  <div class="overlay hidden" id="actionOverlay">
+    <div class="who" id="actionWho"></div>
+    <div class="action-msg" id="actionMsg">이 사람을 제거하시겠습니까?</div>
+    <div class="action-btn-row">
+      <button class="close-btn" id="actionCancelBtn" type="button">취소</button>
+      <button class="close-btn danger-btn" id="actionConfirmBtn" type="button">확인</button>
+    </div>
+  </div>
+
+  <!-- NIGHT INFO OVERLAY (police / spy / citizen result) -->
+  <div class="overlay hidden" id="infoOverlay">
+    <div class="who" id="infoWho"></div>
+    <div class="info-msg" id="infoMsg"></div>
+    <button class="close-btn" id="infoCloseBtn" type="button">확인했어요, 닫기</button>
+    <div class="warn">※ 옆 사람이 보지 않도록 화면을 가려주세요</div>
+  </div>
+
+  <!-- MORNING RESULT OVERLAY -->
+  <div class="overlay hidden" id="morningOverlay">
+    <div class="eyebrow" style="margin-bottom:14px;">MORNING REPORT</div>
+    <div class="info-msg" id="morningMsg" style="font-size:17px; margin-bottom:26px;"></div>
+    <button class="close-btn" id="morningCloseBtn" type="button">낮 투표하러 가기</button>
+  </div>
+
+  <!-- VOTE RESULT OVERLAY -->
+  <div class="overlay hidden" id="voteResultOverlay">
+    <div class="eyebrow" style="margin-bottom:14px;">VOTE RESULT</div>
+    <div class="info-msg" id="voteResultMsg" style="font-size:17px; margin-bottom:26px;"></div>
+    <button class="close-btn" id="voteResultCloseBtn" type="button">다음 밤 시작하기</button>
+  </div>
+
+  <!-- GAME OVER OVERLAY -->
+  <div class="overlay hidden" id="gameOverOverlay">
+    <div class="eyebrow" style="margin-bottom:14px;">GAME OVER</div>
+    <div class="role-icon" id="gameOverIcon" style="font-size:60px; margin-bottom:10px;">🏆</div>
+    <div class="role-name" id="gameOverTitle" style="font-family:'Noto Serif KR', serif; font-weight:900; font-size:26px; margin-bottom:14px;"></div>
+    <div class="info-msg" id="gameOverMsg" style="margin-bottom:26px;"></div>
+    <button class="close-btn" id="gameOverCloseBtn" type="button">처음부터 다시</button>
+  </div>
+
+<script>
+  const setupScreen = document.getElementById('setupScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const countDisplay = document.getElementById('countDisplay');
+  const grid = document.getElementById('grid');
+  const overlay = document.getElementById('overlay');
+  const overlayWho = document.getElementById('overlayWho');
+  const roleCard = document.getElementById('roleCard');
+  const roleIcon = document.getElementById('roleIcon');
+  const roleName = document.getElementById('roleName');
+  const roleDesc = document.getElementById('roleDesc');
+  const progressText = document.getElementById('progressText');
+  const allDoneBanner = document.getElementById('allDoneBanner');
+  const citizenNote = document.getElementById('citizenNote');
+  const errorNote = document.getElementById('errorNote');
+  const startBtn = document.getElementById('startBtn');
+
+  const nightScreen = document.getElementById('nightScreen');
+  const nightGrid = document.getElementById('nightGrid');
+  const dayLabel = document.getElementById('dayLabel');
+  const modeInstruction = document.getElementById('modeInstruction');
+  const actionOverlay = document.getElementById('actionOverlay');
+  const actionWho = document.getElementById('actionWho');
+  const actionMsg = document.getElementById('actionMsg');
+  const infoOverlay = document.getElementById('infoOverlay');
+  const infoWho = document.getElementById('infoWho');
+  const infoMsg = document.getElementById('infoMsg');
+  const morningOverlay = document.getElementById('morningOverlay');
+  const morningMsg = document.getElementById('morningMsg');
+  const voteScreen = document.getElementById('voteScreen');
+  const voteGrid = document.getElementById('voteGrid');
+  const voteDayLabel = document.getElementById('voteDayLabel');
+  const voteResultOverlay = document.getElementById('voteResultOverlay');
+  const voteResultMsg = document.getElementById('voteResultMsg');
+  const gameOverOverlay = document.getElementById('gameOverOverlay');
+  const gameOverIcon = document.getElementById('gameOverIcon');
+  const gameOverTitle = document.getElementById('gameOverTitle');
+  const gameOverMsg = document.getElementById('gameOverMsg');
+
+  const ROLE_META = {
+    mafia:   { label:'마피아', icon:'🔪', desc:'밤마다 한 명을 지목해 제거하세요. 낮에는 시민인 척 하세요.' },
+    police:  { label:'경찰',   icon:'🔎', desc:'밤마다 한 명을 지목해 마피아인지 아닌지 확인할 수 있어요.' },
+    doctor:  { label:'의사',   icon:'💉', desc:'밤마다 한 명을 지목해 치료하세요. 마피아의 공격을 받은 사람이면 살릴 수 있어요.' },
+    spy:     { label:'스파이', icon:'🎭', desc:'마피아 팀입니다. 밤마다 한 명을 지목해 그 사람의 직업을 확인할 수 있어요.' },
+    citizen: { label:'시민',   icon:'🕵️', desc:'낮에 토론으로 마피아를 찾아 투표로 지목하세요.' },
+  };
+
+  let playerCount = 8;
+  let roleCounts = { mafia: 1, police: 0, doctor: 0, spy: 0 };
+  let roles = [];
+  let revealed = [];
+  let names = [];
+  let dead = [];
+  let dayCount = 1;
+  let currentMode = null;
+  let pendingKill = null;
+  let pendingHeal = null;
+  let voteCounts = [];
+
+  const MODE_INSTRUCTIONS = {
+    mafia:   '제거하고 싶은 사람의 카드를 선택하세요',
+    police:  '조사하고 싶은 사람의 카드를 선택하세요 (마피아 여부 확인)',
+    doctor:  '치료하고 싶은 사람의 카드를 선택하세요',
+    spy:     '조사하고 싶은 사람의 카드를 선택하세요 (직업 확인)',
+    citizen: '시민은 밤에 할 수 있는 행동이 없어요',
+  };
+
+  function totalSpecial(){
+    return roleCounts.mafia + roleCounts.police + roleCounts.doctor + roleCounts.spy;
+  }
+
+  function refreshSetupUI(){
+    document.getElementById('n-mafia').textContent = roleCounts.mafia;
+    document.getElementById('n-police').textContent = roleCounts.police;
+    document.getElementById('n-doctor').textContent = roleCounts.doctor;
+    document.getElementById('n-spy').textContent = roleCounts.spy;
+
+    const citizens = playerCount - totalSpecial();
+    citizenNote.innerHTML = `나머지 <b>${Math.max(citizens,0)}명</b>은 시민이 됩니다`;
+
+    const mafiaTeam = roleCounts.mafia + roleCounts.spy;
+    const citizenTeam = roleCounts.police + roleCounts.doctor + Math.max(citizens,0);
+    document.getElementById('mafiaTeamCount').textContent = mafiaTeam;
+    document.getElementById('citizenTeamCount').textContent = citizenTeam;
+
+    if(citizens < 0){
+      errorNote.textContent = '역할 인원 합이 전체 인원보다 많아요. 조정해주세요.';
+      startBtn.disabled = true;
+    } else if(roleCounts.mafia < 1){
+      errorNote.textContent = '마피아는 최소 1명이어야 해요.';
+      startBtn.disabled = true;
+    } else {
+      errorNote.textContent = '';
+      startBtn.disabled = false;
+    }
+  }
+
+  document.getElementById('minusBtn').addEventListener('click', () => {
+    if(playerCount > 3){ playerCount--; countDisplay.textContent = playerCount; refreshSetupUI(); }
+  });
+  document.getElementById('plusBtn').addEventListener('click', () => {
+    if(playerCount < 25){ playerCount++; countDisplay.textContent = playerCount; refreshSetupUI(); }
+  });
+
+  document.querySelectorAll('.mini-stepper button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const role = btn.dataset.role;
+      const dir = parseInt(btn.dataset.dir, 10);
+      const next = roleCounts[role] + dir;
+      const minVal = role === 'mafia' ? 1 : 0;
+      if(next >= minVal && next <= playerCount){
+        roleCounts[role] = next;
+        refreshSetupUI();
+      }
+    });
+  });
+
+  refreshSetupUI();
+
+  startBtn.addEventListener('click', () => {
+    if(startBtn.disabled) return;
+
+    const pool = [];
+    for(let i=0;i<roleCounts.mafia;i++) pool.push('mafia');
+    for(let i=0;i<roleCounts.police;i++) pool.push('police');
+    for(let i=0;i<roleCounts.doctor;i++) pool.push('doctor');
+    for(let i=0;i<roleCounts.spy;i++) pool.push('spy');
+    while(pool.length < playerCount) pool.push('citizen');
+
+    // shuffle
+    for(let i = pool.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    roles = pool;
+    revealed = Array(playerCount).fill(false);
+    names = Array(playerCount).fill('');
+    dead = Array(playerCount).fill(false);
+
+    buildGrid();
+    setupScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+    updateProgress();
+  });
+
+  function buildGrid(){
+    grid.innerHTML = '';
+    for(let i=0; i<playerCount; i++){
+      const card = document.createElement('div');
+      card.className = 'player-card';
+      card.innerHTML = `<div class="num">${i+1}</div><div class="tag">눌러서 확인</div>`;
+      card.addEventListener('click', () => openReveal(i, card));
+      grid.appendChild(card);
+    }
+  }
+
+  function openReveal(index, cardEl){
+    if(revealed[index]) return;
+    overlayWho.textContent = `${index + 1}번 플레이어`;
+    const roleId = roles[index];
+    const meta = ROLE_META[roleId];
+    roleCard.className = 'role-card ' + roleId;
+    roleIcon.textContent = meta.icon;
+    roleName.textContent = meta.label;
+    roleDesc.textContent = meta.desc;
+
+    const nameInput = document.getElementById('nameInput');
+    const closeBtn = document.getElementById('closeBtn');
+    nameInput.value = '';
+    closeBtn.disabled = true;
+    overlay.classList.remove('hidden');
+    setTimeout(() => nameInput.focus(), 150);
+
+    nameInput.oninput = () => {
+      closeBtn.disabled = nameInput.value.trim().length === 0;
+    };
+
+    closeBtn.onclick = () => {
+      if(nameInput.value.trim().length === 0) return;
+      names[index] = nameInput.value.trim();
+      overlay.classList.add('hidden');
+      revealed[index] = true;
+      cardEl.classList.add('done');
+      cardEl.innerHTML = `<div class="checkmark">✓</div><div class="num">${index+1}</div><div class="tag">확인 완료</div>`;
+      updateProgress();
+    };
+  }
+
+  function updateProgress(){
+    const doneCount = revealed.filter(Boolean).length;
+    progressText.textContent = `${doneCount} / ${playerCount} 명 확인 완료`;
+    if(doneCount === playerCount){
+      allDoneBanner.classList.remove('hidden');
+      revealNamesOnCards();
+    } else {
+      allDoneBanner.classList.add('hidden');
+    }
+  }
+
+  function revealNamesOnCards(){
+    const cards = grid.querySelectorAll('.player-card');
+    cards.forEach((cardEl, i) => {
+      cardEl.innerHTML = `<div class="num" style="font-size:18px;">${names[i]}</div>`;
+    });
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    gameScreen.classList.add('hidden');
+    allDoneBanner.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+  });
+
+  document.getElementById('resetBtn2').addEventListener('click', () => {
+    nightScreen.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+  });
+
+  /* ================= NIGHT PHASE ================= */
+
+  document.getElementById('startNightBtn').addEventListener('click', () => {
+    gameScreen.classList.add('hidden');
+    dayCount = 1;
+    pendingKill = null;
+    pendingHeal = null;
+    currentMode = null;
+    startVotePhase();
+  });
+
+  function updateDayLabel(){
+    dayLabel.textContent = `${dayCount}일차 - 밤`;
+  }
+
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const mode = tab.dataset.mode;
+      setMode(currentMode === mode ? null : mode);
+    });
+  });
+
+  function setMode(mode){
+    currentMode = mode;
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.mode === mode);
+    });
+    modeInstruction.textContent = mode ? MODE_INSTRUCTIONS[mode] : '진행할 사람이 자신의 역할 모드를 눌러주세요';
+    buildNightGrid();
+  }
+
+  function buildNightGrid(){
+    nightGrid.innerHTML = '';
+    for(let i=0; i<playerCount; i++){
+      const card = document.createElement('div');
+      const isDead = dead[i];
+      const isSelectable = !!currentMode && currentMode !== 'citizen' && !isDead;
+      card.className = 'night-card' + (isDead ? ' dead' : '') + (isSelectable ? ' selectable' : '');
+      card.innerHTML = isDead
+        ? `<div class="skull">☠</div><div class="nm">${names[i]}</div>`
+        : `<div class="nm">${names[i]}</div>`;
+      if(isSelectable){
+        card.addEventListener('click', () => handleNightSelect(i));
+      }
+      nightGrid.appendChild(card);
+    }
+  }
+
+  function handleNightSelect(index){
+    if(currentMode === 'mafia'){
+      actionWho.textContent = names[index];
+      actionMsg.textContent = `${names[index]}님을 제거하시겠습니까?`;
+      actionOverlay.classList.remove('hidden');
+      document.getElementById('actionCancelBtn').onclick = () => {
+        actionOverlay.classList.add('hidden');
+      };
+      document.getElementById('actionConfirmBtn').onclick = () => {
+        pendingKill = index;
+        actionOverlay.classList.add('hidden');
+        setMode(null);
+      };
+    } else if(currentMode === 'doctor'){
+      actionWho.textContent = names[index];
+      actionMsg.textContent = `${names[index]}님을 치료하시겠습니까?`;
+      actionOverlay.classList.remove('hidden');
+      document.getElementById('actionCancelBtn').onclick = () => {
+        actionOverlay.classList.add('hidden');
+      };
+      document.getElementById('actionConfirmBtn').onclick = () => {
+        pendingHeal = index;
+        actionOverlay.classList.add('hidden');
+        setMode(null);
+      };
+    } else if(currentMode === 'police'){
+      const isMafia = roles[index] === 'mafia';
+      showInfo(names[index], `${names[index]}님은 마피아${isMafia ? '가 맞습니다.' : '가 아닙니다.'}`);
+      setMode(null);
+    } else if(currentMode === 'spy'){
+      const meta = ROLE_META[roles[index]];
+      showInfo(names[index], `${names[index]}님의 직업은 "${meta.label}" 입니다.`);
+      setMode(null);
+    }
+  }
+
+  function showInfo(who, msg){
+    infoWho.textContent = who;
+    infoMsg.textContent = msg;
+    infoOverlay.classList.remove('hidden');
+  }
+  document.getElementById('infoCloseBtn').addEventListener('click', () => {
+    infoOverlay.classList.add('hidden');
+  });
+
+  document.getElementById('morningBtn').addEventListener('click', () => {
+    let msg;
+    if(pendingKill !== null && pendingKill === pendingHeal){
+      msg = `🩹 ${names[pendingKill]}님이 밤사이 습격당했지만 의사가 치료해 살아남았습니다!`;
+    } else if(pendingKill !== null){
+      dead[pendingKill] = true;
+      msg = `💀 ${names[pendingKill]}님이 밤사이 사망했습니다.`;
+    } else {
+      msg = '🌤️ 아무 일도 일어나지 않고 평화로운 아침이 밝았습니다.';
+    }
+    morningMsg.textContent = msg;
+    morningOverlay.classList.remove('hidden');
+  });
+
+  document.getElementById('morningCloseBtn').addEventListener('click', () => {
+    morningOverlay.classList.add('hidden');
+    pendingKill = null;
+    pendingHeal = null;
+    if(checkWinCondition()) return;
+    dayCount++;
+    startVotePhase();
+  });
+
+  /* ================= WIN CONDITION ================= */
+
+  function checkWinCondition(){
+    let aliveMafiaTeam = 0;
+    let aliveCitizenTeam = 0;
+    for(let i=0; i<playerCount; i++){
+      if(dead[i]) continue;
+      if(roles[i] === 'mafia' || roles[i] === 'spy') aliveMafiaTeam++;
+      else aliveCitizenTeam++;
+    }
+    if(aliveMafiaTeam === 0){
+      showGameOver('🎉', '시민 팀 승리!', '마피아 팀이 모두 제거되었습니다. 마을에 평화가 찾아왔어요.');
+      return true;
+    }
+    if(aliveCitizenTeam === 0){
+      showGameOver('🔪', '마피아 팀 승리!', '마피아와 스파이만 살아남았습니다. 마을은 마피아의 손에 넘어갔습니다.');
+      return true;
+    }
+    return false;
+  }
+
+  function showGameOver(icon, title, msg){
+    nightScreen.classList.add('hidden');
+    voteScreen.classList.add('hidden');
+    gameOverIcon.textContent = icon;
+    gameOverTitle.textContent = title;
+    gameOverMsg.textContent = msg;
+    gameOverOverlay.classList.remove('hidden');
+  }
+
+  document.getElementById('gameOverCloseBtn').addEventListener('click', () => {
+    gameOverOverlay.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+  });
+
+  /* ================= DAY VOTE PHASE ================= */
+
+  function startVotePhase(){
+    voteCounts = Array(playerCount).fill(0);
+    voteDayLabel.textContent = `${dayCount}일차 - 낮 투표`;
+    buildVoteGrid();
+    nightScreen.classList.add('hidden');
+    voteScreen.classList.remove('hidden');
+  }
+
+  function buildVoteGrid(){
+    voteGrid.innerHTML = '';
+    for(let i=0; i<playerCount; i++){
+      if(dead[i]) continue; // 살아있는 사람만 투표 대상/참여 가능
+      const card = document.createElement('div');
+      card.className = 'night-card selectable';
+      card.innerHTML = `<div class="vote-badge">${voteCounts[i]}표</div><div class="nm">${names[i]}</div>`;
+      card.addEventListener('click', () => {
+        voteCounts[i]++;
+        buildVoteGrid();
+      });
+      voteGrid.appendChild(card);
+    }
+  }
+
+  function finishVote(executeIndex){
+    if(executeIndex !== null){
+      dead[executeIndex] = true;
+      voteResultMsg.textContent = `⚖️ ${names[executeIndex]}님이 투표로 처형되었습니다.`;
+    } else {
+      voteResultMsg.textContent = '🤝 표가 갈려 아무도 처형되지 않았습니다.';
+    }
+    voteResultOverlay.classList.remove('hidden');
+  }
+
+  document.getElementById('voteSkipBtn').addEventListener('click', () => {
+    finishVote(null);
+  });
+
+  document.getElementById('voteConfirmBtn').addEventListener('click', () => {
+    let maxVotes = 0;
+    for(let i=0; i<playerCount; i++){
+      if(!dead[i] && voteCounts[i] > maxVotes) maxVotes = voteCounts[i];
+    }
+    if(maxVotes === 0){
+      finishVote(null);
+      return;
+    }
+    const topIndices = [];
+    for(let i=0; i<playerCount; i++){
+      if(!dead[i] && voteCounts[i] === maxVotes) topIndices.push(i);
+    }
+    if(topIndices.length === 1){
+      finishVote(topIndices[0]);
+    } else {
+      finishVote(null);
+    }
+  });
+
+  document.getElementById('voteResultCloseBtn').addEventListener('click', () => {
+    voteResultOverlay.classList.add('hidden');
+    if(checkWinCondition()) return;
+    voteScreen.classList.add('hidden');
+    nightScreen.classList.remove('hidden');
+    updateDayLabel();
+    buildNightGrid();
+    setMode(null);
+  });
+
+  document.getElementById('resetBtn3').addEventListener('click', () => {
+    voteScreen.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+  });
+</script>
+</body>
+</html>
