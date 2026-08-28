@@ -27,11 +27,12 @@
 
 ## GitHub Pages로 배포하기
 
-1. 이 폴더(`index.html`, `README.md`)를 새 GitHub 저장소에 업로드합니다.
+1. 이 폴더의 파일 전부(`index.html`, `manifest.json`, `sw.js`, `README.md`, 아이콘 png/ico 파일들)를 저장소 **루트**에 그대로 업로드합니다. (폴더로 묶지 말고 전부 최상위에 있어야 경로가 맞습니다)
 2. 저장소의 **Settings → Pages**로 이동합니다.
 3. **Branch**를 `main` (또는 사용 중인 브랜치), 폴더를 `/ (root)`로 설정하고 저장합니다.
 4. 잠시 후 `https://<사용자이름>.github.io/<저장소이름>/` 주소로 접속하면 바로 게임을 사용할 수 있습니다.
+5. 안드로이드 크롬에서 접속 후 메뉴 → "설치"를 누르면 `manifest.json` 덕분에 홈 화면에 아이콘이 있는 독립 앱처럼 설치됩니다 (단순 바로가기가 아님).
 
 ## 기술 스택
 
-순수 HTML + CSS + JavaScript (프레임워크·빌드 도구 없음). 모바일 브라우저에 최적화되어 있습니다.
+순수 HTML + CSS + JavaScript (프레임워크·빌드 도구 없음). 모바일 브라우저에 최적화되어 있고, `manifest.json` + `sw.js`로 PWA(설치형 웹앱) 형태로 설치할 수 있습니다.
